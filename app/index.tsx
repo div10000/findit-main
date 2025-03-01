@@ -1,16 +1,46 @@
-import { View, Text, TextInput, Button } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+import { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
-export default function Dashboard() {
+const Index = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+      if (isLoggedIn) {
+        router.replace("/dashboard");
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F5F5F5" }}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
 
   return (
-    <View style={{ flex: 1, padding: 40, backgroundColor: '#F5F5F5' }}>
-      <TextInput placeholder="Search items..." style={{ borderWidth: 1, padding: 10, borderRadius: 8, marginBottom: 20 }} />
-      <Button title="Report Lost Item" color="#4CAF50" onPress={() => router.push('/report')} />
-      <Button title="Report Found Item" color="#2196F3" onPress={() => router.push('/report')} />
-      <Feather name="user" size={24} color="red" onPress={() => router.push('/profile')} style={{ position: 'absolute', top: 40, right: 16,}} />
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F5F5F5" }}>
+      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20, color: "#333" }}>
+        Welcome to FindIt
+      </Text>
+      <TouchableOpacity 
+        style={{ backgroundColor: "#4CAF50", padding: 15, borderRadius: 8 }} 
+        onPress={() => router.push("/login")}
+      >
+        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>Enter</Text>
+      </TouchableOpacity>
     </View>
   );
-}
+};
+
+export default Index;
