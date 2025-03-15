@@ -19,20 +19,15 @@ export default function Dashboard() {
                     style={{ backgroundColor: '#4CAF50', padding: 15, borderRadius: 10, marginBottom: 20 }} 
                     onPress={() => router.push('/report')}
                 >
-                    <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: 'bold' }}>Report Lost Item</Text>
+                    <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: 'bold' }}>Report Item</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                    style={{ backgroundColor: '#2196F3', padding: 15, borderRadius: 10, marginBottom: 20 }} 
-                    onPress={() => router.push('/report')}
-                >
-                    <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: 'bold' }}>Report Found Item</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    style={{ backgroundColor: '#FF9800', padding: 15, borderRadius: 10, marginBottom: 20 }} 
-                    onPress={() => router.push('/profile')}
-                >
-                    <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: 'bold' }}>View Profile</Text>
-                </TouchableOpacity>
+    style={{ backgroundColor: '#FF9800', padding: 15, borderRadius: 10, marginBottom: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }} 
+    onPress={() => router.push('/profile')}
+>
+    <Feather name="user" size={20} color="#FFF" style={{ marginRight: 8 }} />
+    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>View Profile</Text>
+</TouchableOpacity>
                 <TouchableOpacity 
                     style={{ backgroundColor: '#CE5A67', padding: 15, borderRadius: 10 }} 
                     onPress={() => router.push('/login')}
