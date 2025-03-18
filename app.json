@@ -14,6 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
+        "useNextNotificationsApi": true,
         "backgroundColor": "#ffffff"
       },
       "package": "com.div10000.findit1"

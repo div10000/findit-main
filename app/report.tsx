@@ -1,6 +1,6 @@
-import { View, Text, TextInput, Button, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, Alert, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";  
 import * as ImagePicker from 'expo-image-picker';
 
@@ -11,6 +11,7 @@ export default function Report() {
     const [status, setStatus] = useState('I lost it😥');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -36,7 +37,7 @@ export default function Report() {
             uri,
             type: "image/jpeg",
             name: "upload.jpg",
-        } as any);  // Type assertion for FormData issue
+        } as any);
 
         data.append("upload_preset", "findit1");  
         data.append("cloud_name", "dmvwfunh9");
@@ -48,10 +49,30 @@ export default function Report() {
             });
 
             let result = await response.json();
-            return result.secure_url;  // Cloudinary's final image URL
+            return result.secure_url;
         } catch (error) {
             console.error("Cloudinary upload error:", error);
             return null;
+        }
+    };
+
+    const checkForMatch = async (object: string, place: string, status: string) => {
+        const oppositeStatus = status === "I lost it😥" ? "I found it🤨" : "I lost it😥";
+
+        const q = query(
+            collection(db, "lostItems"),
+            where("object", "==", object),
+            where("place", "==", place),
+            where("status", "==", oppositeStatus)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            Alert.alert(
+                "Match Found!",
+                `Someone ${oppositeStatus === "I found it🤨" ? "found" : "lost"} a similar item at ${place}. Check the reports.`
+            );
         }
     };
 
@@ -65,6 +86,8 @@ export default function Report() {
             Alert.alert("Error", "User not logged in!");
             return;
         }
+
+        setLoading(true);
 
         try {
             let uploadedImageUrl = imageUrl ? await uploadImageToCloudinary(imageUrl) : null;
@@ -80,6 +103,8 @@ export default function Report() {
             });
 
             Alert.alert("Success", "Item added successfully!");
+            await checkForMatch(object, place, status);
+
             setObject('');
             setDescription('');
             setPlace('');
@@ -87,6 +112,8 @@ export default function Report() {
         } catch (error: any) {
             Alert.alert("Error", "Error adding item: " + error.message);
         }
+
+        setLoading(false);
     };
 
     return (
@@ -140,7 +167,11 @@ export default function Report() {
                 </TouchableOpacity>
             </View>
 
-            <Button title="Submit Details" color="#4CAF50" onPress={uploadItemData} />
+            {loading ? (
+                <ActivityIndicator size="large" color="#4CAF50" />
+            ) : (
+                <Button title="Submit Details" color="#4CAF50" onPress={uploadItemData} />
+            )}
         </View>
     );
 }
