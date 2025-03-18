@@ -2,18 +2,16 @@ import { View, Text, TextInput, Button, Alert, Image, TouchableOpacity } from 'r
 import { useState, useEffect } from 'react';
 import { collection, addDoc } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";  
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"; 
 import * as ImagePicker from 'expo-image-picker';
 
 export default function Report() {
     const [object, setObject] = useState('');
     const [description, setDescription] = useState('');
     const [place, setPlace] = useState('');
-    const [status, setStatus] = useState('I lost it😥');  // Default status
+    const [status, setStatus] = useState('I lost it😥');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
 
-    // Get the logged-in user ID
     useEffect(() => {
         const user = auth.currentUser;
         if (user) setUserId(user.uid);
@@ -21,29 +19,38 @@ export default function Report() {
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images, // Updated line
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
         });
-        
 
         if (!result.canceled) {
             setImageUrl(result.assets[0].uri);
         }
     };
 
-    const uploadImageToFirebase = async (uri: string) => {
-        try {
-            const storage = getStorage();
-            const response = await fetch(uri);
-            const blob = await response.blob();
-            const imageRef = ref(storage, `lostItems/${Date.now()}.jpg`);
+    const uploadImageToCloudinary = async (uri: string) => {
+        const data = new FormData();
+        data.append("file", {
+            uri,
+            type: "image/jpeg",
+            name: "upload.jpg",
+        } as any);  // Type assertion for FormData issue
 
-            await uploadBytes(imageRef, blob);
-            return await getDownloadURL(imageRef);
+        data.append("upload_preset", "findit1");  
+        data.append("cloud_name", "dmvwfunh9");
+
+        try {
+            let response = await fetch(`https://api.cloudinary.com/v1_1/dmvwfunh9/image/upload`, {
+                method: "POST",
+                body: data,
+            });
+
+            let result = await response.json();
+            return result.secure_url;  // Cloudinary's final image URL
         } catch (error) {
-            console.error("Error uploading image:", error);
+            console.error("Cloudinary upload error:", error);
             return null;
         }
     };
@@ -60,7 +67,7 @@ export default function Report() {
         }
 
         try {
-            let uploadedImageUrl = imageUrl ? await uploadImageToFirebase(imageUrl) : null;
+            let uploadedImageUrl = imageUrl ? await uploadImageToCloudinary(imageUrl) : null;
 
             await addDoc(collection(db, "lostItems"), {
                 object,
@@ -122,17 +129,16 @@ export default function Report() {
             />
             
             <View style={{ alignSelf: 'center' }}>
-    <TouchableOpacity onPress={pickImage} style={{ marginBottom: 16 }}>
-        {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={{ width: 100, height: 100, borderRadius: 8 }} />
-        ) : (
-            <View style={{ width: 100, height: 100, borderRadius: 8, backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ color: '#3E4A89' }}>+ Add Photo</Text>
+                <TouchableOpacity onPress={pickImage} style={{ marginBottom: 16 }}>
+                    {imageUrl ? (
+                        <Image source={{ uri: imageUrl }} style={{ width: 100, height: 100, borderRadius: 8 }} />
+                    ) : (
+                        <View style={{ width: 100, height: 100, borderRadius: 8, backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ color: '#3E4A89' }}>+ Add Photo</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
             </View>
-        )}
-    </TouchableOpacity>
-</View>
-
 
             <Button title="Submit Details" color="#4CAF50" onPress={uploadItemData} />
         </View>
