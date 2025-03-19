@@ -1,6 +1,7 @@
 import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { auth } from '../firebaseConfig';
 
 export default function Dashboard() {
     const router = useRouter();
@@ -48,11 +49,15 @@ export default function Dashboard() {
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                    style={{ backgroundColor: '#CE5A67', padding: 15, borderRadius: 10 }} 
-                    onPress={() => router.push('/login')}
-                >
-                    <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: 'bold' }}>Logout</Text>
-                </TouchableOpacity>
+    style={{ backgroundColor: '#CE5A67', padding: 15, borderRadius: 10 }} 
+    onPress={() => {
+        auth.signOut().then(() => {
+            router.replace('/login'); // Prevent going back to Dashboard
+        });
+    }}
+>
+    <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: 'bold' }}>Logout</Text>
+</TouchableOpacity>
             </ScrollView>
         </View>
     );
