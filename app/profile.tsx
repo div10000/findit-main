@@ -12,6 +12,7 @@ export default function Profile() {
     const [image, setImage] = useState<string | null>(user?.photoURL || null);
     const [name, setName] = useState(user?.displayName || '');
     const [email, setEmail] = useState(user?.email || '');
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -20,6 +21,7 @@ export default function Profile() {
         }
     }, [user]);
 
+    // Pick image
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -32,9 +34,50 @@ export default function Profile() {
         }
     };
 
-    const handleUpdateProfile = () => {
+    // Upload to Cloudinary
+    const uploadImageToCloudinary = async (uri: string) => {
+        setUploading(true);
+        const data = new FormData();
+        data.append("file", {
+            uri,
+            type: "image/jpeg",
+            name: "profile.jpg"
+        } as any);
+        data.append("upload_preset", "YOUR_UPLOAD_PRESET"); // 🔑 replace with your preset
+        data.append("cloud_name", "YOUR_CLOUD_NAME"); // 🔑 replace with your Cloud name
+
+        try {
+            const res = await fetch(`https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload`, {
+                method: "POST",
+                body: data
+            });
+            const json = await res.json();
+            setUploading(false);
+            return json.secure_url; // ✅ Cloudinary hosted image URL
+        } catch (error) {
+            setUploading(false);
+            Alert.alert("Error", "Image upload failed");
+            return null;
+        }
+    };
+
+    // Update profile
+    const handleUpdateProfile = async () => {
         if (!user) return;
-        updateProfile(user, { displayName: name, photoURL: image })
+
+        let photoURL = image;
+
+        // If image is a local file, upload it
+        if (image && image.startsWith("file://")) {
+            const uploadedUrl = await uploadImageToCloudinary(image);
+            if (uploadedUrl) {
+                photoURL = uploadedUrl;
+            } else {
+                return;
+            }
+        }
+
+        updateProfile(user, { displayName: name, photoURL })
             .then(() => {
                 Alert.alert('Success', 'Profile updated successfully');
                 router.push('/dashboard');
@@ -53,7 +96,7 @@ export default function Profile() {
             {/* Profile Picture + Name */}
             <TouchableOpacity onPress={pickImage} style={{ alignItems: 'center', marginBottom: 20 }}>
                 {image ? (
-                    <Image source={{ uri: image }} style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: '#4CAF50', shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 }} />
+                    <Image source={{ uri: image }} style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: '#4CAF50' }} />
                 ) : (
                     <View style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: '#ddd', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#bbb' }}>
                         <Text style={{ fontSize: 14, color: '#666' }}>+ Add Photo</Text>
@@ -79,12 +122,21 @@ export default function Profile() {
             />
 
             {/* Update Profile Button */}
-            <TouchableOpacity onPress={handleUpdateProfile} style={{ backgroundColor: "#4CAF50", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center' }}>
-                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Update Profile</Text>
+            <TouchableOpacity 
+                onPress={handleUpdateProfile} 
+                style={{ backgroundColor: "#4CAF50", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center' }}
+                disabled={uploading}
+            >
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                    {uploading ? "Updating..." : "Update Profile"}
+                </Text>
             </TouchableOpacity>
 
             {/* Logout Button */}
-            <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: "#CE5A67", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center', marginTop: 10 }}>
+            <TouchableOpacity 
+                onPress={handleLogout} 
+                style={{ backgroundColor: "#CE5A67", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center', marginTop: 10 }}
+            >
                 <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Logout</Text>
             </TouchableOpacity>
             
