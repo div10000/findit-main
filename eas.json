@@ -1,6 +1,6 @@
 {
     "build": {
-      "findit1": {
+      "finditMain": {
         "android": {
           "buildType": "apk"
         }
