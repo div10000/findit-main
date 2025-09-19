@@ -21,7 +21,6 @@ export default function Profile() {
         }
     }, [user]);
 
-    // Pick image
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -34,50 +33,47 @@ export default function Profile() {
         }
     };
 
-    // Upload to Cloudinary
-    const uploadImageToCloudinary = async (uri: string) => {
-        setUploading(true);
+    const uploadImageToCloudinary = async (localUri: string) => {
         const data = new FormData();
         data.append("file", {
-            uri,
+            uri: localUri,
             type: "image/jpeg",
-            name: "profile.jpg"
+            name: "profile.jpg",
         } as any);
-        data.append("upload_preset", "YOUR_UPLOAD_PRESET"); // 🔑 replace with your preset
-        data.append("cloud_name", "YOUR_CLOUD_NAME"); // 🔑 replace with your Cloud name
+        data.append("upload_preset", "findit_profiles"); // ✅ unsigned preset
 
         try {
-            const res = await fetch(`https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload`, {
+            setUploading(true);
+            let res = await fetch("https://api.cloudinary.com/v1_1/dmvwfunh9/image/upload", {
                 method: "POST",
-                body: data
+                body: data,
             });
-            const json = await res.json();
+            let result = await res.json();
             setUploading(false);
-            return json.secure_url; // ✅ Cloudinary hosted image URL
-        } catch (error) {
+            if (result.secure_url) {
+                return result.secure_url;
+            } else {
+                throw new Error("Upload failed");
+            }
+        } catch (err) {
             setUploading(false);
             Alert.alert("Error", "Image upload failed");
             return null;
         }
     };
 
-    // Update profile
     const handleUpdateProfile = async () => {
         if (!user) return;
+        let uploadedUrl = image;
 
-        let photoURL = image;
-
-        // If image is a local file, upload it
-        if (image && image.startsWith("file://")) {
-            const uploadedUrl = await uploadImageToCloudinary(image);
-            if (uploadedUrl) {
-                photoURL = uploadedUrl;
-            } else {
-                return;
-            }
+        // Upload to Cloudinary if new local image picked
+        if (image && !image.startsWith("http")) {
+            uploadedUrl = await uploadImageToCloudinary(image);
         }
 
-        updateProfile(user, { displayName: name, photoURL })
+        if (!uploadedUrl) return;
+
+        updateProfile(user, { displayName: name, photoURL: uploadedUrl })
             .then(() => {
                 Alert.alert('Success', 'Profile updated successfully');
                 router.push('/dashboard');
@@ -122,21 +118,14 @@ export default function Profile() {
             />
 
             {/* Update Profile Button */}
-            <TouchableOpacity 
-                onPress={handleUpdateProfile} 
-                style={{ backgroundColor: "#4CAF50", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center' }}
-                disabled={uploading}
-            >
+            <TouchableOpacity onPress={handleUpdateProfile} disabled={uploading} style={{ backgroundColor: uploading ? "#999" : "#4CAF50", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center' }}>
                 <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                    {uploading ? "Updating..." : "Update Profile"}
+                    {uploading ? "Uploading..." : "Update Profile"}
                 </Text>
             </TouchableOpacity>
 
             {/* Logout Button */}
-            <TouchableOpacity 
-                onPress={handleLogout} 
-                style={{ backgroundColor: "#CE5A67", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center', marginTop: 10 }}
-            >
+            <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: "#CE5A67", padding: 15, borderRadius: 8, width: '100%', alignItems: 'center', marginTop: 10 }}>
                 <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>Logout</Text>
             </TouchableOpacity>
             

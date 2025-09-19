@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "aftervd",
+    "name": "FindIt",
     "slug": "aftervd",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,12 +12,14 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.div10000.findit1",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "useNextNotificationsApi": true,
         "backgroundColor": "#ffffff"
       },
-      "package": "com.div10000.findit1"
+      "permissions": [],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -46,6 +48,7 @@
       "eas": {
         "projectId": "71636198-9b15-43d7-b5d1-7d3f15d5f3e0"
       }
-    }
+    },
+    "owner": "div10000"
   }
 }
