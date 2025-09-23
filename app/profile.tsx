@@ -89,6 +89,27 @@ export default function Profile() {
     return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#F5F5F5' }}>
             
+            {/* Rewards icon (top-right) */}
+            <TouchableOpacity
+                onPress={() => router.push('/rewards')}
+                style={{
+                    position: 'absolute',
+                    top: 40,
+                    right: 20,
+                    zIndex: 10,
+                    backgroundColor: '#fff',
+                    padding: 8,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: '#eee',
+                    elevation: 4,
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+            >
+                <Text style={{ fontSize: 20 }}>🏆</Text>
+            </TouchableOpacity>
+
             {/* Profile Picture + Name */}
             <TouchableOpacity onPress={pickImage} style={{ alignItems: 'center', marginBottom: 20 }}>
                 {image ? (
